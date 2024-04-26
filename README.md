@@ -6,4 +6,4 @@ Tweak the Values.
 
 Have Fun!
 
-![alt text](https://github.com/k1ln/mosaic/blob/main/ecample.png?raw=true)
+![alt text](https://github.com/k1ln/mosaic/blob/main/example.png?raw=true)
