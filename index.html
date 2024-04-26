@@ -1,0 +1,501 @@
+<html>
+<head>
+    <script type="text/javascript">
+        
+        function sleep(milliseconds) {
+        const date = Date.now();
+        let currentDate = null;
+        do {
+            currentDate = Date.now();
+        } while (currentDate - date < milliseconds);
+        }
+        function getRandomX(x,size,randomsize,raster,i,randomrotation) {
+            return x+((size+Math.random()*randomsize)*Math.cos(raster*i/180*Math.PI+(Math.random()-0.5)*randomrotation));
+        }
+
+        function getRandomY(x,size,randomsize,raster,i,randomrotation) {
+            return x+((size+Math.random()*randomsize)*Math.sin(raster*i/180*Math.PI+(Math.random()-0.5)*randomrotation));
+        }
+        function paintMosaik(x,y,size,randomsize,raster,i,randomrotation,numberOfCorners,paintlength) {
+            var mosaiklength = graphics["mosaiks"].length-1;
+            do
+            {
+                var xx = this.getRandomX(x,size,randomsize,raster,i,randomrotation);
+                var yy = this.getRandomY(y,size,randomsize,raster,i,randomrotation);
+                graphics["mosaiks"][mosaiklength]["coordinates"][i+1] = [];  
+                graphics["mosaiks"][mosaiklength]["coordinates"][i+1]["x"]=xx;
+                graphics["mosaiks"][mosaiklength]["coordinates"][i+1]["y"]=yy;
+
+                if (xx < graphics["mosaiks"][mosaiklength]["minx"]){graphics["mosaiks"][mosaiklength]["minx"]=xx;}
+                if (xx > graphics["mosaiks"][mosaiklength]["maxx"]){graphics["mosaiks"][mosaiklength]["maxx"]=xx;}
+                if (yy < graphics["mosaiks"][mosaiklength]["miny"]){graphics["mosaiks"][mosaiklength]["miny"]=yy;}
+                if (yy > graphics["mosaiks"][mosaiklength]["maxy"]){graphics["mosaiks"][mosaiklength]["maxy"]=yy;}
+            
+                
+               // graphics["ctx"].lineTo(xx,yy);
+                i++;
+            } while (i<numberOfCorners);
+        }
+
+        function endMosaik() {
+            var mosaiklength = graphics["mosaiks"].length-1; 
+            var xfirst = graphics["mosaiks"][mosaiklength]["coordinates"][1]["x"];
+            var yfirst = graphics["mosaiks"][mosaiklength]["coordinates"][1]["y"];;
+            graphics["ctx"].lineTo(xfirst, yfirst);
+            graphics["ctx"].closePath();
+            graphics["ctx"].fill();
+        }
+
+
+        function setupgraphics(numberOfCorners,x,y,size,randomsize,i,randomrotation,levellineobjectlength,raster) {
+            var xfirst = this.getRandomX(x,size,randomsize,raster,i,randomrotation);
+            var yfirst = this.getRandomY(y,size,randomsize,raster,i,randomrotation);
+            
+            //graphics["ctx"].beginPath();
+            //graphics["ctx"].moveTo(xfirst, yfirst);
+            var mosaikslength = graphics["mosaiks"].length;
+            graphics["mosaiks"][mosaikslength] = [];
+            graphics["mosaiks"][mosaikslength]["minx"] = xfirst;
+            graphics["mosaiks"][mosaikslength]["miny"] = yfirst;
+            graphics["mosaiks"][mosaikslength]["maxx"] = xfirst;
+            graphics["mosaiks"][mosaikslength]["maxy"] = yfirst;
+            graphics["mosaiks"][mosaikslength]["type"]="mosaik";
+            graphics["mosaiks"][mosaikslength]["coordinates"] = [];
+            graphics["mosaiks"][mosaikslength]["coordinates"][1] = []; 
+            graphics["mosaiks"][mosaikslength]["coordinates"][1]["x"]=xfirst;
+            graphics["mosaiks"][mosaikslength]["coordinates"][1]["y"]=yfirst;
+        }
+
+        function generateMosaik(numberOfCorners,size,x,y,randomsize,randomrotation) {
+            var raster = 360/numberOfCorners;
+            var i = 0;
+            var mosaiklength=graphics["mosaiks"].length;
+            setupgraphics(numberOfCorners,x,y,size,randomsize,i,randomrotation,mosaiklength,raster);
+            i = 1;
+            paintMosaik(x,y,size,randomsize,raster,i,randomrotation,numberOfCorners,mosaiklength);
+            //this.endMosaik();
+        }
+
+        function generateNumberWithMin(num,min) {
+            var number = Math.round(Math.random()*num);
+            if (number < min){number = min};
+            return number;
+        }
+
+        function Randomround(num) {
+            return Math.round(Math.random()*num);
+        }
+        function componentToHex(c) {
+            var hex = c.toString(16);
+            return hex.length == 1 ? "0" + hex : hex;
+        }
+
+        function fullColorHex(r, g, b) {
+            return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+        }
+
+        function paint(x,y,imosaik)
+        {
+           //graphics["ctx"].beginPath();
+            //graphics["ctx"].moveTo(xfirst, yfirst);
+            //console.log('paintlog|'+x+'|'+y+'|'+imosaik);
+            //console.log(graphics);
+            var i = 0;
+            var miny = graphics["mosaiks"][imosaik]["miny"];
+            var maxy = graphics["mosaiks"][imosaik]["maxy"];
+            var maxx = graphics["mosaiks"][imosaik]["maxx"];
+            var r = 0;
+            var g = 0;
+            var b = 0;
+            do
+            {
+                var minx = graphics["mosaiks"][imosaik]["minx"];
+                do
+                {
+                    var p = ctx.getImageData(
+                            minx, 
+                            miny, 
+                            1, 
+                            1).data;
+                    r += p[0];
+                    g += p[1];
+                    b += p[2];
+                    minx++;
+                    i++;
+                }while(minx<maxx)
+                miny++;
+            }while(miny<maxy)
+            r = Math.round(r / i);
+            g = Math.round(g / i);
+            b = Math.round(b / i);
+
+            var backgroundcolor = hexToRgb(document.getElementById("hintergrundfarbe").value);
+            if(r == backgroundcolor.r && g == backgroundcolor.g && b == backgroundcolor.b)
+            {
+                if (r=255)
+                {
+                    r = 254;
+                }
+                else
+                {
+                    r++;
+                }
+            }
+
+
+            var color = fullColorHex(r,g,b);
+
+            graphics["ctx"].fillStyle = color;
+            var min = graphics["mosaiks"][imosaik]
+
+            coordinateslength = graphics["mosaiks"][imosaik]["coordinates"].length;
+            var icoordinates = 1;
+            do
+            {
+                graphics["mosaiks"][imosaik]["coordinates"][icoordinates]["x"]+=x;
+                graphics["mosaiks"][imosaik]["coordinates"][icoordinates]["y"]+=y;
+                icoordinates++;
+            }while(icoordinates < coordinateslength);
+
+            var icoordinates = 1;
+            graphics["ctx"].beginPath();
+            var xx = graphics["mosaiks"][imosaik]["coordinates"][1]["x"];
+            var yy = graphics["mosaiks"][imosaik]["coordinates"][1]["y"];
+            graphics["ctx"].moveTo(xx,yy);
+            do
+            {
+
+                var xx = graphics["mosaiks"][imosaik]["coordinates"][icoordinates]["x"];
+                var yy = graphics["mosaiks"][imosaik]["coordinates"][icoordinates]["y"];
+                graphics["ctx"].lineTo(xx,yy);
+                icoordinates++;
+            }while(icoordinates < coordinateslength);
+            xx = graphics["mosaiks"][imosaik]["coordinates"][1]["x"];
+            yy = graphics["mosaiks"][imosaik]["coordinates"][1]["y"];
+            graphics["ctx"].lineTo(xx,yy);
+            graphics["ctx"].closePath();
+            graphics["ctx"].fill();
+            graphics["ctx"].restore();
+        }
+
+        // returns true iff the line from (a,b)->(c,d) intersects with (p,q)->(r,s)
+        function intersects(a,b,c,d,p,q,r,s) {
+            var det, gamma, lambda;
+            det = (c - a) * (s - q) - (r - p) * (d - b);
+            if (det === 0) {
+                return false;
+            } else {
+                lambda = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
+                gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
+                return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
+            }
+        };
+
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext("2d");
+    
+    function readImage(e){
+        e = e || window.event;
+        var reader = new FileReader();
+        reader.onload = function(event){
+            var img = new Image();
+            img.onload = function(){
+                canvas.width = img.width;
+                canvas.height = img.height;
+                document.getElementById("canvas").width = img.width;
+                document.getElementById("canvas").height = img.height;
+                ctx.drawImage(img,0,0);
+            }
+            img.src = event.target.result;
+        }
+        reader.readAsDataURL(e.target.files[0]);     
+    }
+    </script>
+</head>
+<style>
+</style>
+<body>
+    <table><tr><td><label for="head">Hintergrundfarbe</label></td><td><input type="color" id="hintergrundfarbe" value="#000000"></td><td></td><td>Fortschritt</td><td id="percent">0 %</td><td>Buffergr&ouml;&szlig;e</td><td id="buffersize">0</td><td>Mosaiks erstellt</td><td id="amountmosaiks">0</td></tr>
+    <tr><td><label for="head">Gr&ouml;&szlig;e von bis</label></td><td><input type="text" id="groessevon" value="5"/></td><td><input type="text" id="groessebis" value="10"/></td></tr>
+    <tr><td><label for="head">Gr&ouml;&szlig;e2 von bis</label></td><td><input type="text" id="groessevon2" value="10"/></td><td><input type="text" id="groessebis2" value="25"/></td></tr>
+    <tr><td><label for="head">Abstand zwischen Steinen X und Y</label></td><td><input type="text" id="abstandzwischensteinenx" value="5"/></td><td><input type="text" id="abstandzwischensteineny" value="5"/></td></tr>
+    <tr><td><label for="head">Anzahl Ecken von bis</label></td><td><input type="text" id="anzahleckenvon" value="4"/></td><td><input type="text" id="anzahleckenbis" value="8"/></td></tr>
+    <tr><td><label for="head">Foto hochladen</label></td><td><input type="file" id="fotohochladen" onchange="readImage()"/></td></tr>
+    <tr><td><button value="Mosaik erstellen" onclick="createMosaik()">Mosaik erstellen</button></td></tr>
+    </table>
+    <canvas width="1000" height="1000" id="canvas"></canvas>
+</body>
+<script>
+    function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+    var graphics = [];
+    graphics["ctx"] = document.getElementById("canvas").getContext('2d');
+    graphics["mosaiks"] = [];
+    
+    var yaverage = 0;
+    var yaverageold = 0;
+    var y = 0;
+    var yhit = 0;
+    var yaveragedidnotraise = 0;
+    var numbercornersmin = document.getElementById("anzahleckenvon").value*1;
+    var numbercornersmax = document.getElementById("anzahleckenbis").value*1;
+    var sizemin = document.getElementById("groessevon").value*1;
+    var sizemax = document.getElementById("groessebis").value*1;
+    var sizemin2 = document.getElementById("groessevon2").value*1;
+    var sizemax2 = document.getElementById("groessebis2").value*1;
+    var canvasx = document.getElementById("canvas").width;
+    var canvasy = document.getElementById("canvas").height;
+    var jumpx = document.getElementById("abstandzwischensteinenx").value*1;
+    var jumpy = document.getElementById("abstandzwischensteineny").value*1;
+    var backgroundcolor = hexToRgb(document.getElementById("hintergrundfarbe").value);
+    var ctx = canvas.getContext("2d");
+    var nointersect = true;
+    var is = 0;
+
+    function createMosaiktimeout()
+    {
+        if(yaveragedidnotraise<500)
+        {
+        //break;
+            yaverage = Math.round(yaverage*0.99 + yhit*0.01);
+            if (yaverage == yaverageold)
+            {
+                yaveragedidnotraise++;
+            }
+            else
+            {
+                yaveragedidnotraise = 0;
+            }
+            document.getElementById("percent").innerHTML = Math.round(yaverage/canvasx * 10000) /100 +' %';
+            document.getElementById("buffersize").innerHTML =graphics["mosaiks"].length;
+            document.getElementById("amountmosaiks").innerHTML =is;
+            yaverageold = yaverage;
+            //console.log("yaverage:"+yaverage);
+            if (yaverage<0)
+            {
+                yaverage = 0;
+            }
+            if (yaverage > canvasx/10)
+            {   
+                imosaik = 0;
+                var mosaikslength = graphics["mosaiks"].length;
+                do
+                {
+                    if(graphics["mosaiks"][imosaik]["maxy"]<yaverage-canvasx/10)
+                    {
+                        graphics["mosaiks"].splice(imosaik,1);
+                        mosaikslength=graphics["mosaiks"].length;
+                    }
+                    imosaik++;
+                }while(imosaik<mosaikslength);
+            }
+            
+            var numberOfCorners = generateNumberWithMin(numbercornersmax,numbercornersmin);
+            var size = generateNumberWithMin(sizemax2,sizemin2);
+            var x = 0;
+            var y = 0;
+            var randomsize = generateNumberWithMin(sizemax,sizemin);
+            var randomrot = generateNumberWithMin(1,1); 
+            console.log(randomrot);
+            generateMosaik(numberOfCorners,size,x,y,randomsize,randomrot);
+            var mosaikslength = graphics["mosaiks"].length-1;
+           // console.log("Length:"+mosaikslength);
+            var oldmaxx = graphics["mosaiks"][mosaikslength]["maxx"];
+            var oldminx = graphics["mosaiks"][mosaikslength]["minx"];
+            if (yaverage > canvasx/10)
+            {
+                graphics["mosaiks"][mosaikslength]["miny"] += yaverage;
+                graphics["mosaiks"][mosaikslength]["maxy"] += yaverage;
+            }
+            nointersect=true;
+            x = 0;
+            if(yaverage > canvasx/10)
+            {y = yaverage;}
+            else
+            {y=0;}
+            
+            do {
+                x=0;
+                graphics["mosaiks"][mosaikslength]["maxx"]=oldmaxx;
+                graphics["mosaiks"][mosaikslength]["minx"]=oldminx; 
+                do{
+                    var imosaik = 0;
+                    if (mosaikslength > 0)
+                    {
+                        
+                        do 
+                        {
+                            if(
+                                (graphics["mosaiks"][mosaikslength]["minx"]>=graphics["mosaiks"][imosaik]["minx"]
+                            ||  graphics["mosaiks"][mosaikslength]["maxx"]>=graphics["mosaiks"][imosaik]["minx"])
+                            &&
+                            (graphics["mosaiks"][mosaikslength]["minx"]<=graphics["mosaiks"][imosaik]["maxx"]
+                            ||  graphics["mosaiks"][mosaikslength]["maxx"]<=graphics["mosaiks"][imosaik]["maxx"])
+                            &&
+                            (graphics["mosaiks"][mosaikslength]["miny"]>=graphics["mosaiks"][imosaik]["miny"]
+                            ||  graphics["mosaiks"][mosaikslength]["maxy"]>=graphics["mosaiks"][imosaik]["miny"])
+                            &&
+                            (graphics["mosaiks"][mosaikslength]["miny"]<=graphics["mosaiks"][imosaik]["maxy"]
+                            ||  graphics["mosaiks"][mosaikslength]["maxy"]<=graphics["mosaiks"][imosaik]["maxy"])
+                            )
+                            {
+                                
+                                var icoordinates = 1;
+                                var lengthcoordinates = graphics["mosaiks"][mosaikslength]["coordinates"].length;
+                                
+                                do
+                                {
+                                    if (icoordinates == lengthcoordinates-1)
+                                    {
+                                        var inextcoordinates = 1;
+                                    }
+                                    else
+                                    {
+                                        var inextcoordinates = icoordinates+1;
+                                    }
+                                    // returns true iff the line from (a,b)->(c,d) intersects with (p,q)->(r,s)
+                                    var a = graphics["mosaiks"][mosaikslength]["coordinates"][icoordinates]["x"] + x;
+                                    var b = graphics["mosaiks"][mosaikslength]["coordinates"][icoordinates]["y"] + y;
+                                    var c = graphics["mosaiks"][mosaikslength]["coordinates"][inextcoordinates]["x"] + x;
+                                    var d = graphics["mosaiks"][mosaikslength]["coordinates"][inextcoordinates]["y"] + y;
+                                    
+
+                                    var imosaikcoordinates = 1;
+                                    mosaikcoordinateslength = graphics["mosaiks"][imosaik]["coordinates"].length;
+                                    do 
+                                    {
+                                        if (imosaikcoordinates == mosaikcoordinateslength-1)
+                                        {
+                                            var imosaiknextcoordinates = 1;
+                                        }
+                                        else
+                                        {
+                                            var imosaiknextcoordinates = imosaikcoordinates+1;
+                                        }
+                                        var p = graphics["mosaiks"][imosaik]["coordinates"][imosaikcoordinates]["x"];
+                                        var q = graphics["mosaiks"][imosaik]["coordinates"][imosaikcoordinates]["y"];
+                                        var r = graphics["mosaiks"][imosaik]["coordinates"][imosaiknextcoordinates]["x"];
+                                        var s = graphics["mosaiks"][imosaik]["coordinates"][imosaiknextcoordinates]["y"];
+                                        var checkintersect = intersects(a,b,c,d,p,q,r,s); 
+                                        
+                                        if(checkintersect)
+                                        {
+                                            //console.log(checkintersect)
+                                            //console.log(imosaik+'|'+mosaikslength+'|'+imosaikcoordinates+'|'+x+'|'+y);
+                                            nointersect = false; 
+                                        }
+                                        imosaikcoordinates++;
+                                    }while(imosaikcoordinates < mosaikcoordinateslength && nointersect == true);
+                                    icoordinates++;
+                                }while(icoordinates<lengthcoordinates && nointersect == true);
+                            }
+                            else
+                            {
+                                
+                            }
+                            imosaik++;
+                        }while (imosaik < mosaikslength && nointersect == true);
+                    }
+                    if ((graphics["mosaiks"][mosaikslength]["minx"]<0 
+                    || graphics["mosaiks"][mosaikslength]["maxx"]>canvasx
+                    || graphics["mosaiks"][mosaikslength]["miny"]<0
+                    || graphics["mosaiks"][mosaikslength]["maxy"]>canvasy) && nointersect == true)
+                    {
+                        nointersect=false;
+                    }
+                    
+                    if (nointersect==true)
+                    {
+                        var icoordinatesmosaik = 1;
+                        var coordinatesmosaiklength = graphics["mosaiks"][mosaikslength]["coordinates"].length;
+                        var checked = true;
+                        do 
+                        {
+                            var p = graphics["ctx"].getImageData(
+                            graphics["mosaiks"][mosaikslength]["coordinates"][icoordinatesmosaik]["x"] + x, 
+                            graphics["mosaiks"][mosaikslength]["coordinates"][icoordinatesmosaik]["y"] + y, 
+                            1, 
+                            1).data;
+                        //console.log(p);
+                            if (p[0] !== backgroundcolor.r || p[1] !== backgroundcolor.g || p[2] !== backgroundcolor.b)
+                            {
+                                checked = false;
+                            }    
+                            icoordinatesmosaik++;
+                        }while(icoordinatesmosaik<coordinatesmosaiklength);
+                        if (checked)
+                        {
+                            paint(x,y,mosaikslength);
+                            yhit=y;
+                            x = canvasx+1;
+                            y = canvasy+1;
+                            iThousandMosaiksDidNotFit=0;
+                        } 
+                        else
+                        {
+                            nointersect = false;
+                        }   
+                    }    
+                    x+=jumpx;
+                    nointersect=true;
+                    graphics["mosaiks"][mosaikslength]["minx"]+=jumpx;
+                    graphics["mosaiks"][mosaikslength]["maxx"]+=jumpx;
+                }while(x<canvasx+1)
+                y+=jumpy;
+                graphics["mosaiks"][mosaikslength]["miny"]+=jumpy;
+                graphics["mosaiks"][mosaikslength]["maxy"]+=jumpy;
+            }while(y<canvasy+1)
+            
+            iThousandMosaiksDidNotFit++;
+            x = 0;
+            y = 0;
+            if (nointersect == false)
+            {
+                graphics["mosaiks"].splice(mosaikslength,1);
+            }
+            is++;
+            //console.log(is);
+            //sleep(300);
+            timeoutID = window.setTimeout(createMosaiktimeout,0); 
+        }
+    }
+
+    function createMosaik()
+    {
+        yaverage = 0;
+        yaverageold = 0;
+        y = 0;
+        yhit = 0;
+        graphics["ctx"] = document.getElementById("canvas").getContext('2d');
+        graphics["mosaiks"] = [];
+        yaveragedidnotraise = 0;
+        numbercornersmin = document.getElementById("anzahleckenvon").value*1;
+        numbercornersmax = document.getElementById("anzahleckenbis").value*1;
+        sizemin = document.getElementById("groessevon").value*1;
+        sizemax = document.getElementById("groessebis").value*1;
+        sizemin2 = document.getElementById("groessevon2").value*1;
+        sizemax2 = document.getElementById("groessebis2").value*1;
+        canvasx = document.getElementById("canvas").width;
+        canvasy = document.getElementById("canvas").height;
+        jumpx = document.getElementById("abstandzwischensteinenx").value*1;
+        jumpy = document.getElementById("abstandzwischensteineny").value*1;
+        backgroundcolor = hexToRgb(document.getElementById("hintergrundfarbe").value);
+        ctx = canvas.getContext("2d");
+        graphics["ctx"].fillStyle = document.getElementById("hintergrundfarbe").value;
+        graphics["ctx"].fillRect(0, 0, document.getElementById("canvas").width, document.getElementById("canvas").height);
+        //graphics["ctx"].lineTo(xx,yy);
+        
+        iThousandMosaiksDidNotFit = 0;
+        nointersect = true;
+        is = 0;
+        timeoutID = window.setTimeout(createMosaiktimeout,0); 
+    }
+</script>
+
+</html>
